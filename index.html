@@ -13,9 +13,9 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <style>
-:root{--bg:#eef2f3;--card:#fff;--ink:#16262b;--sub:#5d6f75;--line:#d3dde0;--pri:#17614f;--pri-ink:#fff;--warn:#b3321f;--soft:#dcebe6;--s1:#17614f;--s2:#8a6d1a;--s3:#8a3a2e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a1d;--card:#182429;--ink:#e8f0f2;--sub:#97aab0;--line:#2b3b41;--pri:#4fb597;--pri-ink:#06231b;--warn:#ff8a78;--soft:#1d3a33;--s1:#4fb597;--s2:#e0bf5a;--s3:#ff9c8a}}
-:root[data-theme="dark"]{--bg:#0f1a1d;--card:#182429;--ink:#e8f0f2;--sub:#97aab0;--line:#2b3b41;--pri:#4fb597;--pri-ink:#06231b;--warn:#ff8a78;--soft:#1d3a33;--s1:#4fb597;--s2:#e0bf5a;--s3:#ff9c8a}
+:root{--bg:#eef2f3;--card:#fff;--ink:#16262b;--sub:#5d6f75;--line:#d3dde0;--pri:#17614f;--pri-ink:#fff;--warn:#b3321f;--soft:#dcebe6;--s1:#17614f;--s2:#5d6f75;--s3:#c0291b;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1a1d;--card:#182429;--ink:#e8f0f2;--sub:#97aab0;--line:#2b3b41;--pri:#4fb597;--pri-ink:#06231b;--warn:#ff8a78;--soft:#1d3a33;--s1:#4fb597;--s2:#97aab0;--s3:#ff8a78}}
+:root[data-theme="dark"]{--bg:#0f1a1d;--card:#182429;--ink:#e8f0f2;--sub:#97aab0;--line:#2b3b41;--pri:#4fb597;--pri-ink:#06231b;--warn:#ff8a78;--soft:#1d3a33;--s1:#4fb597;--s2:#97aab0;--s3:#ff8a78}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Noto Sans TC","PingFang TC","Microsoft JhengHei",system-ui,sans-serif}
 main{max-width:560px;margin:0 auto;padding:16px 16px 100px}
@@ -51,6 +51,10 @@ button,.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:11p
 .meta{color:var(--sub);font-size:13px}
 .tag{display:inline-block;font-size:13px;font-weight:600;padding:1px 9px;border-radius:999px;border:1.5px solid currentColor;margin-left:6px;vertical-align:1px}
 .s-續訪中{color:var(--s1)}.s-停止續訪{color:var(--s2)}.s-不接受傳道{color:var(--s3)}
+.c-續訪中{--sc:var(--s1)}.c-停止續訪{--sc:var(--s2)}.c-不接受傳道{--sc:var(--s3)}
+.rec{border-left:6px solid var(--sc,var(--line))}
+h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bottom:2px solid currentColor;padding-bottom:4px}
+#s1:checked+label{background:var(--s1);border-color:var(--s1);color:var(--pri-ink)}#s2:checked+label{background:var(--s2);border-color:var(--s2);color:var(--pri-ink)}#s3:checked+label{background:var(--s3);border-color:var(--s3);color:var(--pri-ink)}
 .row{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
 .row .btn,.row button{min-height:36px;padding:5px 12px;font-size:14px}
 .empty{text-align:center;color:var(--sub);padding:36px 12px}
@@ -128,7 +132,7 @@ button,.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:11p
   });
  }
  function card(r){
-  return '<div class="card rec">'+(r.photo?'<img alt="現場照片" src="'+r.photo+'">':'<div class="ph"></div>')+
+  return '<div class="card rec c-'+esc(r.status)+'">'+(r.photo?'<img alt="現場照片" src="'+r.photo+'">':'<div class="ph"></div>')+
   '<div style="min-width:0;flex:1"><h3>'+esc(r.name)+'('+esc(r.gender)+')<span class="tag s-'+esc(r.status)+'">'+esc(r.status)+'</span></h3>'+
   '<div class="meta">'+esc(r.region||'未填地區')+' · '+esc(r.time)+'</div>'+
   (r.items?'<div>分發:'+esc(r.items)+'</div>':'')+(r.topic?'<div>話題:'+esc(r.topic)+'</div>':'')+(r.note?'<div class="meta">備註:'+esc(r.note)+'</div>':'')+
@@ -145,7 +149,7 @@ button,.btn{font:inherit;font-weight:600;border:0;border-radius:10px;padding:11p
   list.sort(function(a,b){return g==='name'?a.name.localeCompare(b.name,'zh-Hant'):(key(a).localeCompare(key(b),'zh-Hant')||a.name.localeCompare(b.name,'zh-Hant'))});
   var h='',last=null;
   list.forEach(function(r){
-   if(g!=='name'&&key(r)!==last){last=key(r);var n=list.filter(function(x){return key(x)===last}).length;h+='<h2>'+esc(last)+'('+n+')</h2>'}
+   if(g!=='name'&&key(r)!==last){last=key(r);var n=list.filter(function(x){return key(x)===last}).length;h+='<h2'+(g==='status'?' class="s-'+esc(last)+'"':'')+'>'+esc(last)+'('+n+')</h2>'}
    h+=card(r);
   });
   $('items').innerHTML=h;
