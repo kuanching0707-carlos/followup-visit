@@ -66,11 +66,11 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
 <body>
 <main>
  <section id="list">
-  <h1>續訪記錄</h1>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h1>續訪記錄</h1><select id="lang" aria-label="Language" style="width:auto;font-size:14px;padding:6px 8px"><option value="auto">Auto / 自動</option><option value="zh-TW">繁體中文</option><option value="zh-CN">简体中文</option><option value="en">English</option><option value="ja">日本語</option><option value="vi">Tiếng Việt</option><option value="id">Bahasa Indonesia</option><option value="th">ภาษาไทย</option><option value="ko">한국어</option><option value="fil">Filipino</option><option value="es">Español</option></select></div>
   <p class="sub" id="count"></p>
   <div class="tools">
    <input type="text" id="q" placeholder="搜尋姓名、地區、話題" aria-label="搜尋">
-   <select id="stFilter" aria-label="依狀態篩選"><option value="">所有狀態</option><option>續訪中</option><option>停止續訪</option><option>不接受傳道</option></select>
+   <select id="stFilter" aria-label="依狀態篩選"><option value="">所有狀態</option><option value="續訪中">續訪中</option><option value="停止續訪">停止續訪</option><option value="不接受傳道">不接受傳道</option></select>
    <select id="group" aria-label="分類方式" class="full"><option value="region">依地區分類</option><option value="name">依姓名排序</option><option value="status">依目前狀態分類</option></select>
    <button class="ghost" id="xls">匯出 Excel</button>
    <button class="ghost" id="cloudMenu">備份與還原</button>
@@ -121,10 +121,10 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
  function idbGet(){return idb().then(function(d){return new Promise(function(res,rej){var r=d.transaction('kv').objectStore('kv').get('recs');r.onsuccess=function(){res(r.result)};r.onerror=function(){rej(r.error)}})})}
  function idbSet(v){return idb().then(function(d){return new Promise(function(res,rej){var t=d.transaction('kv','readwrite');t.objectStore('kv').put(v,'recs');t.oncomplete=res;t.onerror=function(){rej(t.error)}})})}
  function persist(){idbSet(recs).catch(function(){toast('儲存失敗,請先匯出備份檔')});return true}
- function toast(t){var el=$('toast');el.textContent=t;el.classList.add('on');setTimeout(function(){el.classList.remove('on')},2600)}
+ function toast(t){var el=$('toast');el.textContent=T(t);el.classList.add('on');setTimeout(function(){el.classList.remove('on')},2600)}
  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
  function nav(lat,lng){return 'https://www.google.com/maps/dir/?api=1&destination='+lat+','+lng}
- function navBtn(lat,lng){return '<a class="btn ghost" target="_blank" rel="noopener" href="'+nav(lat,lng)+'">Google 地圖導航</a>'}
+ function navBtn(lat,lng){return '<a class="btn ghost" target="_blank" rel="noopener" href="'+nav(lat,lng)+'">'+T('Google 地圖導航')+'</a>'}
  function uid(){return 'r'+Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
  
  function filtered(){
@@ -135,24 +135,24 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
   });
  }
  function card(r){
-  return '<div class="card rec c-'+esc(r.status)+'">'+(r.photo?'<img alt="現場照片" src="'+r.photo+'">':'<div class="ph"></div>')+
-  '<div style="min-width:0;flex:1"><h3>'+esc(r.name)+'('+esc(r.gender)+')<span class="tag s-'+esc(r.status)+'">'+esc(r.status)+'</span></h3>'+
-  '<div class="meta">'+esc(r.region||'未填地區')+' · '+esc(r.time)+'</div>'+
-  (r.items?'<div>分發:'+esc(r.items)+'</div>':'')+(r.topic?'<div>話題:'+esc(r.topic)+'</div>':'')+(r.note?'<div class="meta">備註:'+esc(r.note)+'</div>':'')+
-  '<div class="row"><button data-edit="'+r.id+'">編輯</button>'+(r.lat!=null?navBtn(r.lat,r.lng):'')+'<button class="danger" data-del="'+r.id+'">刪除</button></div></div></div>';
+  return '<div class="card rec c-'+esc(r.status)+'">'+(r.photo?'<img alt="'+T('現場照片')+'" src="'+r.photo+'">':'<div class="ph"></div>')+
+  '<div style="min-width:0;flex:1"><h3>'+esc(r.name)+'('+esc(T(r.gender))+')<span class="tag s-'+esc(r.status)+'">'+esc(T(r.status))+'</span></h3>'+
+  '<div class="meta">'+esc(r.region||T('未填地區'))+' · '+esc(r.time)+'</div>'+
+  (r.items?'<div>'+T('分發:')+esc(r.items)+'</div>':'')+(r.topic?'<div>'+T('話題:')+esc(r.topic)+'</div>':'')+(r.note?'<div class="meta">'+T('備註:')+esc(r.note)+'</div>':'')+
+  '<div class="row"><button data-edit="'+r.id+'>'+T('編輯')+'</button>'+(r.lat!=null?navBtn(r.lat,r.lng):'')+'<button class="danger" data-del="'+r.id+'>'+T('刪除')+'</button></div></div></div>';
  }
  function render(){
   var list=filtered(),g=$('group').value;
-  $('count').textContent=recs.length?'共 '+recs.length+' 筆,顯示 '+list.length+' 筆':'';
+  $('count').textContent=recs.length?F('共 {n} 筆,顯示 {m} 筆',{n:recs.length,m:list.length}):'';
   var rs={};recs.forEach(function(r){if(r.region)rs[r.region]=1});
   $('regions').innerHTML=Object.keys(rs).map(function(x){return '<option value="'+esc(x)+'">'}).join('');
-  if(!recs.length){$('items').innerHTML='<div class="empty">還沒有記錄。<br>按下方「新增訪視」開始第一筆。</div>';return}
-  if(!list.length){$('items').innerHTML='<div class="empty">沒有符合條件的記錄。</div>';return}
+  if(!recs.length){$('items').innerHTML='<div class="empty">'+T('還沒有記錄。按下方「新增訪視」開始第一筆。')+'</div>';return}
+  if(!list.length){$('items').innerHTML='<div class="empty">'+T('沒有符合條件的記錄。')+'</div>';return}
   var key=function(r){return g==='status'?r.status:g==='region'?(r.region||'未填地區'):''};
   list.sort(function(a,b){return g==='name'?a.name.localeCompare(b.name,'zh-Hant'):(key(a).localeCompare(key(b),'zh-Hant')||a.name.localeCompare(b.name,'zh-Hant'))});
   var h='',last=null;
   list.forEach(function(r){
-   if(g!=='name'&&key(r)!==last){last=key(r);var n=list.filter(function(x){return key(x)===last}).length;h+='<h2'+(g==='status'?' class="s-'+esc(last)+'"':'')+'>'+esc(last)+'('+n+')</h2>'}
+   if(g!=='name'&&key(r)!==last){last=key(r);var n=list.filter(function(x){return key(x)===last}).length;h+='<h2'+(g==='status'?' class="s-'+esc(last)+'"':'')+'>'+esc(g==='status'||last==='未填地區'?T(last):last)+'('+n+')</h2>'}
    h+=card(r);
   });
   $('items').innerHTML=h;
@@ -163,10 +163,10 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
   $('barList').classList.toggle('hide',f);$('barForm').classList.toggle('hide',!f);
   window.scrollTo(0,0);
  }
- function setPhoto(d){$('photoBox').innerHTML=d?'<img alt="照片" src="'+d+'">':'<span>尚未拍照</span>'}
+ function setPhoto(d){$('photoBox').innerHTML=d?'<img alt="'+T('照片')+'" src="'+d+'">':'<span>'+T('尚未拍照')+'</span>'}
  function setGps(){
-  if(cur.lat!=null){$('gps').innerHTML='座標:<b>'+cur.lat.toFixed(6)+', '+cur.lng.toFixed(6)+'</b>';$('navRow').innerHTML=navBtn(cur.lat,cur.lng)}
-  else{$('gps').innerHTML='座標:<b>尚未取得</b>';$('navRow').innerHTML=''}
+  if(cur.lat!=null){$('gps').innerHTML=T('座標:')+'<b>'+cur.lat.toFixed(6)+', '+cur.lng.toFixed(6)+'</b>';$('navRow').innerHTML=navBtn(cur.lat,cur.lng)}
+  else{$('gps').innerHTML=T('座標:')+'<b>'+T('尚未取得')+'</b>';$('navRow').innerHTML=''}
  }
  function fill(r){
   r=r||{};cur={photo:r.photo||'',lat:r.lat==null?null:r.lat,lng:r.lng==null?null:r.lng};
@@ -174,13 +174,13 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
   $('name').value=r.name||'';$('region').value=r.region||'';$('mat').value=r.items||'';$('topic').value=r.topic||'';$('note').value=r.note||'';
   document.querySelectorAll('input[name=g],input[name=s]').forEach(function(x){x.checked=(x.value===r.gender||x.value===r.status)});
   if(!r.id)$('s1').checked=true;
-  $('cam').value='';autoReg='';$('rhint').textContent='拍照或按「定位」後會自動填入,也可手動修改。';
+  $('cam').value='';autoReg='';$('rhint').textContent=T('拍照或按「定位」後會自動填入,也可手動修改。');
  }
  function getGps(){
-  $('gps').innerHTML='座標:<b>定位中…</b>';
-  if(!navigator.geolocation){$('gps').innerHTML='座標:<b>此裝置不支援定位</b>';return}
+  $('gps').innerHTML=T('座標:')+'<b>'+T('定位中…')+'</b>';
+  if(!navigator.geolocation){$('gps').innerHTML=T('座標:')+'<b>'+T('此裝置不支援定位')+'</b>';return}
   navigator.geolocation.getCurrentPosition(function(p){cur.lat=p.coords.latitude;cur.lng=p.coords.longitude;setGps();fillRegion()},
-   function(){$('gps').innerHTML='座標:<b>無法取得</b>(請允許位置權限後重新拍照)'},{enableHighAccuracy:true,timeout:15000,maximumAge:0});
+   function(){$('gps').innerHTML=T('座標:')+'<b>'+T('無法取得')+'</b>'+T('(請允許位置權限後重新拍照)')},{enableHighAccuracy:true,timeout:15000,maximumAge:0});
  }
  function shrink(file,cb){
   var rd=new FileReader();
@@ -193,7 +193,7 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
  async function regionOf(lat,lng){
   try{
    var c=new AbortController(),t=setTimeout(function(){c.abort()},9000);
-   var r=await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&addressdetails=1&accept-language=zh-TW&lat='+lat+'&lon='+lng,{signal:c.signal});
+   var r=await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&addressdetails=1&accept-language='+LANGS[LI]+'&lat='+lat+'&lon='+lng,{signal:c.signal});
    clearTimeout(t);if(!r.ok)return '';
    var a=(await r.json()).address||{},p1,p2;
    if(a.county&&a.city){p1=a.county;p2=a.city}
@@ -205,10 +205,10 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
  }
  async function fillRegion(){
   if(cur.lat==null)return;
-  var h=$('rhint');h.textContent='正在取得地區…';
+  var h=$('rhint');h.textContent=T('正在取得地區…');
   var g=await regionOf(cur.lat,cur.lng);
-  if(g){var v=$('region').value.trim();if(!v||v===autoReg)$('region').value=g;autoReg=g;h.textContent='已由 GPS 取得:'+g+'(可修改)'}
-  else h.textContent=navigator.onLine?'暫時無法取得地區,可手動輸入。':'目前離線,無法自動取得地區;連網後會自動補上,也可先手動輸入。';
+  if(g){var v=$('region').value.trim();if(!v||v===autoReg)$('region').value=g;autoReg=g;h.textContent=F('已由 GPS 取得:{g}(可修改)',{g:g})}
+  else h.textContent=navigator.onLine?T('暫時無法取得地區,可手動輸入。'):T('目前離線,無法自動取得地區;連網後會自動補上,也可先手動輸入。');
  }
  async function backfill(){
   if(bf||!navigator.onLine)return;bf=true;var ch=false;
@@ -219,7 +219,7 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
  $('loc').onclick=getGps;
  $('shoot').onclick=function(){$('cam').click()};
  $('cam').onchange=function(){var f=this.files&&this.files[0];if(!f)return;getGps();shrink(f,function(d){cur.photo=d;setPhoto(d)})};
- $('add').onclick=function(){editId=null;$('ftitle').textContent='新增訪視';fill();show(true)};
+ $('add').onclick=function(){editId=null;$('ftitle').textContent=T('新增訪視');fill();show(true)};
  $('cancel').onclick=function(){show(false)};
  $('save').onclick=function(){
   var name=$('name').value.trim(),g=document.querySelector('input[name=g]:checked'),s=document.querySelector('input[name=s]:checked');
@@ -234,8 +234,8 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
  };
  $('items').onclick=function(e){
   var t=e.target,ed=t.getAttribute&&t.getAttribute('data-edit'),dl=t.getAttribute&&t.getAttribute('data-del');
-  if(ed){var r=recs.filter(function(x){return x.id===ed})[0];if(r){editId=ed;$('ftitle').textContent='編輯記錄';fill(r);show(true)}}
-  if(dl&&confirm('確定刪除這筆記錄?')){recs=recs.filter(function(x){return x.id!==dl});persist();render()}
+  if(ed){var r=recs.filter(function(x){return x.id===ed})[0];if(r){editId=ed;$('ftitle').textContent=T('編輯記錄');fill(r);show(true)}}
+  if(dl&&confirm(T('確定刪除這筆記錄?'))){recs=recs.filter(function(x){return x.id!==dl});persist();render()}
  };
  ['q','stFilter','group'].forEach(function(i){$(i).oninput=render});
 
@@ -267,7 +267,7 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
   return zip([
    {n:'[Content_Types].xml',d:H+'<Types xmlns="'+NS+'package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>'},
    {n:'_rels/.rels',d:H+'<Relationships xmlns="'+NS+'package/2006/relationships"><Relationship Id="rId1" Type="'+R+'/officeDocument" Target="xl/workbook.xml"/></Relationships>'},
-   {n:'xl/workbook.xml',d:H+'<workbook xmlns="'+M+'" xmlns:r="'+R+'"><sheets><sheet name="續訪記錄" sheetId="1" r:id="rId1"/></sheets></workbook>'},
+   {n:'xl/workbook.xml',d:H+'<workbook xmlns="'+M+'" xmlns:r="'+R+'"><sheets><sheet name="'+X(T('續訪記錄'))+'" sheetId="1" r:id="rId1"/></sheets></workbook>'},
    {n:'xl/_rels/workbook.xml.rels',d:H+'<Relationships xmlns="'+NS+'package/2006/relationships"><Relationship Id="rId1" Type="'+R+'/worksheet" Target="worksheets/sheet1.xml"/></Relationships>'},
    {n:'xl/worksheets/sheet1.xml',d:H+'<worksheet xmlns="'+M+'"><cols><col min="1" max="12" width="20" customWidth="1"/></cols><sheetData>'+sd+'</sheetData></worksheet>'}
   ],'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -287,10 +287,10 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
  $('xls').onclick=function(){
   var list=filtered();
   if(!list.length){toast('目前沒有記錄可匯出');return}
-  var rows=[['姓名','性別','地區','目前狀態','分發的資料','感興趣的話題','備註','緯度','經度','地圖連結','建立時間','最後編輯']];
-  list.forEach(function(r){rows.push([r.name,r.gender,r.region||'',r.status,r.items||'',r.topic||'',r.note||'',
+  var rows=[['姓名','性別','地區','目前狀態','分發的資料','感興趣的話題','備註','緯度','經度','地圖連結','建立時間','最後編輯'].map(function(h){return T(h)})];
+  list.forEach(function(r){rows.push([r.name,T(r.gender),r.region||'',T(r.status),r.items||'',r.topic||'',r.note||'',
    r.lat==null?'':r.lat,r.lng==null?'':r.lng,r.lat==null?'':'https://www.google.com/maps/search/?api=1&query='+r.lat+','+r.lng,r.time||'',r.edited||''])});
-  saveFile('續訪記錄_'+today()+'.xlsx',xlsx(rows)).then(function(ok){if(ok)toast('Excel 已匯出(照片請用備份檔保存)')});
+  saveFile(T('續訪記錄')+'_'+today()+'.xlsx',xlsx(rows)).then(function(ok){if(ok)toast('Excel 已匯出(照片請用備份檔保存)')});
  };
 
  /* ===== 備份檔匯出 / 匯入 ===== */
@@ -298,7 +298,7 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
  $('up').onclick=function(){
   if(!recs.length){toast('目前沒有記錄可備份');return}
   var blob=new Blob([JSON.stringify({app:'jw-followup',version:1,exported:new Date().toISOString(),records:recs})],{type:'application/json'});
-  saveFile('JW-Follow-up-備份-'+today()+'.json',blob).then(function(ok){if(ok)toast('備份檔已匯出,請存到雲端硬碟或寄給自己')});
+  saveFile('JW-Follow-up-backup-'+today()+'.json',blob).then(function(ok){if(ok)toast('備份檔已匯出,請存到雲端硬碟或寄給自己')});
  };
  $('down').onclick=function(){$('imp').click()};
  $('imp').onchange=function(){
@@ -313,7 +313,7 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
      if(!have[c.id]){recs.push(c);have[c.id]=c;add++}
      else if((c.edited||c.time||'')>(have[c.id].edited||have[c.id].time||'')){recs=recs.map(function(r){return r.id===c.id?c:r});upd++}
     });
-    persist();render();toast('還原完成:新增 '+add+' 筆,更新 '+upd+' 筆');
+    persist();render();toast(F('還原完成:新增 {a} 筆,更新 {u} 筆',{a:add,u:upd}));
    }catch(e){toast('備份檔格式不正確')}
    inp.value='';
   };
@@ -321,7 +321,39 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
  };
 
  /* ===== 啟動:讀取資料、離線快取 ===== */
- async function init(){
+ /* ===== 多國語言:依手機語言自動切換,也可手動選擇 ===== */
+ var TB={"續訪記錄":["续访记录","Follow-up Records","再訪問記録","Hồ sơ thăm lại","Catatan Kunjungan Ulang","บันทึกการเยี่ยมซ้ำ","재방문 기록","Mga Rekord ng Pagdalaw-Muli","Registro de revisitas"],"所有狀態":["所有状态","All statuses","すべての状態","Tất cả trạng thái","Semua status","ทุกสถานะ","모든 상태","Lahat ng katayuan","Todos los estados"],"續訪中":["续访中","Ongoing","継続中","Đang thăm","Sedang dikunjungi","กำลังเยี่ยมต่อ","방문 중","Patuloy na dinadalaw","En curso"],"停止續訪":["停止续访","Stopped","訪問停止","Đã dừng","Dihentikan","หยุดเยี่ยม","방문 중단","Itinigil","Detenido"],"不接受傳道":["不接受传道","Not receptive","受け入れない","Không tiếp nhận","Tidak menerima","ไม่ยอมรับ","받아들이지 않음","Hindi tumatanggap","No receptivo"],"依地區分類":["按地区分类","Group by area","地域別","Nhóm theo khu vực","Kelompokkan per wilayah","จัดกลุ่มตามพื้นที่","지역별 보기","Pangkatin ayon sa lugar","Agrupar por zona"],"依姓名排序":["按姓名排序","Sort by name","名前順","Sắp theo tên","Urutkan menurut nama","เรียงตามชื่อ","이름순","Ayusin ayon sa pangalan","Ordenar por nombre"],"依目前狀態分類":["按当前状态分类","Group by status","状態別","Nhóm theo trạng thái","Kelompokkan per status","จัดกลุ่มตามสถานะ","상태별 보기","Pangkatin ayon sa katayuan","Agrupar por estado"],"匯出 Excel":["导出 Excel","Export Excel","Excelに書き出す","Xuất Excel","Ekspor Excel","ส่งออก Excel","Excel로 내보내기","I-export sa Excel","Exportar a Excel"],"備份與還原":["备份与还原","Backup & Restore","バックアップと復元","Sao lưu & khôi phục","Cadangan & Pulihkan","สำรองและกู้คืนข้อมูล","백업 및 복원","Backup at Ibalik","Copia de seguridad y restauración"],"備份檔包含所有記錄與照片。匯出後請存到 Google Drive、iCloud,或傳給自己;換手機時按「匯入備份檔」還原。":["备份文件包含所有记录与照片。导出后请存到 Google Drive、iCloud,或发给自己;换手机时点「导入备份文件」还原。","The backup file contains all records and photos. After exporting, save it to Google Drive or iCloud, or send it to yourself. On a new phone, tap \"Import backup\" to restore.","バックアップファイルにはすべての記録と写真が含まれます。書き出したらGoogleドライブやiCloudに保存するか、自分宛に送信してください。機種変更時は「バックアップを読み込む」で復元できます。","Tệp sao lưu gồm toàn bộ ghi chép và ảnh. Sau khi xuất, hãy lưu vào Google Drive, iCloud hoặc gửi cho chính mình. Khi đổi điện thoại, bấm \"Nhập tệp sao lưu\" để khôi phục.","Berkas cadangan berisi semua catatan dan foto. Setelah diekspor, simpan ke Google Drive atau iCloud, atau kirim ke diri sendiri. Di ponsel baru, ketuk \"Impor cadangan\" untuk memulihkan.","ไฟล์สำรองมีบันทึกและรูปภาพทั้งหมด หลังส่งออกให้บันทึกลง Google Drive หรือ iCloud หรือส่งให้ตัวเอง เมื่อเปลี่ยนโทรศัพท์ ให้แตะ \"นำเข้าไฟล์สำรอง\" เพื่อกู้คืน","백업 파일에는 모든 기록과 사진이 들어 있습니다. 내보낸 뒤 Google Drive나 iCloud에 저장하거나 자신에게 보내 두세요. 새 휴대폰에서는 \"백업 가져오기\"를 눌러 복원하세요.","Ang backup file ay naglalaman ng lahat ng rekord at larawan. Pagkatapos i-export, i-save ito sa Google Drive o iCloud, o ipadala sa sarili. Sa bagong telepono, i-tap ang \"I-import ang backup\" para ibalik.","El archivo de copia contiene todos los registros y fotos. Después de exportarlo, guárdalo en Google Drive o iCloud, o envíatelo a ti mismo. En un teléfono nuevo, toca \"Importar copia\" para restaurar."],"匯出備份檔":["导出备份文件","Export backup","バックアップを書き出す","Xuất tệp sao lưu","Ekspor cadangan","ส่งออกไฟล์สำรอง","백업 내보내기","I-export ang backup","Exportar copia"],"匯入備份檔":["导入备份文件","Import backup","バックアップを読み込む","Nhập tệp sao lưu","Impor cadangan","นำเข้าไฟล์สำรอง","백업 가져오기","I-import ang backup","Importar copia"],"新增訪視":["新增访视","New visit","訪問を追加","Thêm lần thăm","Kunjungan baru","เพิ่มการเยี่ยม","방문 추가","Bagong pagdalaw","Nueva visita"],"拍照時會自動記錄目前位置。":["拍照时会自动记录当前位置。","The current location is recorded automatically when you take a photo.","撮影すると現在地が自動で記録されます。","Vị trí hiện tại được ghi tự động khi chụp ảnh.","Lokasi saat ini dicatat otomatis saat Anda mengambil foto.","ระบบจะบันทึกตำแหน่งปัจจุบันให้อัตโนมัติเมื่อถ่ายรูป","사진을 찍으면 현재 위치가 자동으로 기록됩니다.","Awtomatikong itatala ang kasalukuyang lokasyon kapag kumuha ka ng larawan.","La ubicación actual se registra automáticamente al tomar una foto."],"拍照與位置":["拍照与位置","Photo & Location","写真と位置","Ảnh & vị trí","Foto & Lokasi","รูปภาพและตำแหน่ง","사진 및 위치","Larawan at Lokasyon","Foto y ubicación"],"尚未拍照":["尚未拍照","No photo yet","写真なし","Chưa có ảnh","Belum ada foto","ยังไม่มีรูปภาพ","사진 없음","Wala pang larawan","Aún no hay foto"],"開啟相機拍照":["打开相机拍照","Open camera","カメラで撮影","Mở camera chụp ảnh","Buka kamera","เปิดกล้องถ่ายรูป","카메라로 촬영","Buksan ang camera","Abrir cámara"],"座標:":["坐标:","Coordinates:","座標:","Tọa độ:","Koordinat:","พิกัด:","좌표:","Mga koordinato:","Coordenadas:"],"尚未取得":["尚未获取","Not available yet","未取得","Chưa có","Belum tersedia","ยังไม่ได้รับ","아직 없음","Wala pa","Aún no disponible"],"住戶姓名":["住户姓名","Resident name","住人の名前","Tên cư dân","Nama penghuni","ชื่อผู้พักอาศัย","거주자 이름","Pangalan ng residente","Nombre del residente"],"地區(依 GPS 自動填入)":["地区(按 GPS 自动填入)","Area (auto-filled from GPS)","地域(GPSで自動入力)","Khu vực (tự điền theo GPS)","Wilayah (otomatis dari GPS)","พื้นที่ (กรอกอัตโนมัติจาก GPS)","지역 (GPS로 자동 입력)","Lugar (awtomatiko mula sa GPS)","Zona (autocompletada con GPS)"],"定位":["定位","Locate","現在地","Định vị","Lokasi","ระบุตำแหน่ง","내 위치","Hanapin","Ubicar"],"拍照或按「定位」後會自動填入,也可手動修改。":["拍照或点「定位」后会自动填入,也可手动修改。","Filled in automatically after you take a photo or tap \"Locate\". You can also edit it.","撮影するか「現在地」を押すと自動入力されます。手動で修正もできます。","Tự điền sau khi chụp ảnh hoặc bấm \"Định vị\". Bạn cũng có thể sửa tay.","Terisi otomatis setelah Anda mengambil foto atau mengetuk \"Lokasi\". Anda juga bisa mengubahnya.","จะกรอกอัตโนมัติหลังถ่ายรูปหรือแตะ \"ระบุตำแหน่ง\" และแก้ไขเองได้","사진을 찍거나 \"내 위치\"를 누르면 자동으로 입력됩니다. 직접 수정할 수도 있습니다.","Awtomatikong mapupunan pagkatapos kumuha ng larawan o mag-tap ng \"Hanapin\". Maaari mo rin itong baguhin.","Se completa automáticamente al tomar una foto o tocar \"Ubicar\". También puedes editarlo."],"住戶性別":["住户性别","Gender","性別","Giới tính","Jenis kelamin","เพศ","성별","Kasarian","Sexo"],"男":["男","Male","男性","Nam","Laki-laki","ชาย","남성","Lalaki","Hombre"],"女":["女","Female","女性","Nữ","Perempuan","หญิง","여성","Babae","Mujer"],"分發的資料":["分发的资料","Literature given","配布した資料","Tài liệu đã phát","Publikasi yang diberikan","เอกสารที่แจกจ่าย","전달한 자료","Mga literaturang ibinigay","Publicaciones entregadas"],"住戶感興趣的話題":["住户感兴趣的话题","Topics of interest","関心のある話題","Chủ đề quan tâm","Topik yang diminati","หัวข้อที่สนใจ","관심 있는 주제","Mga paksang interesado","Temas de interés"],"備註":["备注","Notes","メモ","Ghi chú","Catatan","หมายเหตุ","메모","Mga tala","Notas"],"目前狀態":["当前状态","Current status","現在の状態","Trạng thái hiện tại","Status saat ini","สถานะปัจจุบัน","현재 상태","Kasalukuyang katayuan","Estado actual"],"+ 新增訪視":["+ 新增访视","+ New visit","+ 訪問を追加","+ Thêm lần thăm","+ Kunjungan baru","+ เพิ่มการเยี่ยม","+ 방문 추가","+ Bagong pagdalaw","+ Nueva visita"],"取消":["取消","Cancel","キャンセル","Hủy","Batal","ยกเลิก","취소","Kanselahin","Cancelar"],"儲存":["保存","Save","保存","Lưu","Simpan","บันทึก","저장","I-save","Guardar"],"搜尋姓名、地區、話題":["搜索姓名、地区、话题","Search name, area, topic","名前・地域・話題で検索","Tìm tên, khu vực, chủ đề","Cari nama, wilayah, topik","ค้นหาชื่อ พื้นที่ หัวข้อ","이름, 지역, 주제 검색","Maghanap ng pangalan, lugar, paksa","Buscar nombre, zona, tema"],"搜尋":["搜索","Search","検索","Tìm kiếm","Cari","ค้นหา","검색","Maghanap","Buscar"],"依狀態篩選":["按状态筛选","Filter by status","状態で絞り込み","Lọc theo trạng thái","Saring menurut status","กรองตามสถานะ","상태별 필터","I-filter ayon sa katayuan","Filtrar por estado"],"分類方式":["分类方式","Grouping","並べ方","Cách nhóm","Cara pengelompokan","วิธีจัดกลุ่ม","정렬 방식","Paraan ng pagpapangkat","Agrupación"],"請輸入姓名":["请输入姓名","Enter name","名前を入力","Nhập tên","Masukkan nama","กรอกชื่อ","이름 입력","Ilagay ang pangalan","Escribe el nombre"],"拍照後自動填入市、區、鄉鎮":["拍照后自动填入市、区、乡镇","Auto-filled after photo: city, district, town","撮影後に市区町村を自動入力","Tự điền thành phố, quận, xã sau khi chụp","Terisi otomatis setelah foto: kota, kecamatan, desa","กรอกอัตโนมัติหลังถ่ายรูป: เมือง เขต ตำบล","사진 촬영 후 시·구·읍면 자동 입력","Awtomatiko pagkatapos ng larawan: lungsod, distrito, bayan","Autocompletado tras la foto: ciudad, distrito, municipio"],"例如:單張 2 份、手冊 1 本":["例如:单张 2 份、手册 1 本","e.g. 2 tracts, 1 booklet","例:チラシ2枚、冊子1冊","VD: 2 tờ, 1 sách nhỏ","Contoh: 2 traktat, 1 buklet","เช่น ใบปลิว 2 ใบ หนังสือเล่มเล็ก 1 เล่ม","예: 전단 2장, 소책자 1권","Hal.: 2 tract, 1 booklet","Ej.: 2 tratados, 1 folleto"],"例如:家庭、健康、聖經預言":["例如:家庭、健康、圣经预言","e.g. family, health, Bible prophecy","例:家族、健康、聖書預言","VD: gia đình, sức khỏe, lời tiên tri","Contoh: keluarga, kesehatan, nubuat Alkitab","เช่น ครอบครัว สุขภาพ คำพยากรณ์ในคัมภีร์ไบเบิล","예: 가족, 건강, 성경 예언","Hal.: pamilya, kalusugan, hula sa Bibliya","Ej.: familia, salud, profecía bíblica"],"其他需要記住的事":["其他需要记住的事","Anything else to remember","その他覚えておくこと","Điều khác cần nhớ","Hal lain yang perlu diingat","เรื่องอื่นที่ควรจำ","그 밖에 기억할 사항","Iba pang dapat tandaan","Otras cosas que recordar"],"儲存失敗,請先匯出備份檔":["保存失败,请先导出备份文件","Save failed. Please export a backup first.","保存に失敗しました。先にバックアップを書き出してください","Lưu thất bại. Hãy xuất tệp sao lưu trước.","Gagal menyimpan. Ekspor cadangan terlebih dahulu.","บันทึกไม่สำเร็จ โปรดส่งออกไฟล์สำรองก่อน","저장에 실패했습니다. 먼저 백업을 내보내세요.","Hindi na-save. I-export muna ang backup.","No se pudo guardar. Exporta primero una copia."],"Google 地圖導航":["Google 地图导航","Navigate with Google Maps","Googleマップでナビ","Dẫn đường Google Maps","Navigasi dengan Google Maps","นำทางด้วย Google Maps","Google 지도로 길 안내","Mag-navigate gamit ang Google Maps","Navegar con Google Maps"],"現場照片":["现场照片","Photo of the location","現場の写真","Ảnh hiện trường","Foto lokasi","รูปภาพสถานที่","현장 사진","Larawan ng lugar","Foto del lugar"],"未填地區":["未填地区","No area","地域未入力","Chưa có khu vực","Belum ada wilayah","ไม่ระบุพื้นที่","지역 없음","Walang lugar","Sin zona"],"分發:":["分发:","Given:","配布:","Đã phát:","Diberikan:","แจกจ่าย:","전달:","Ibinigay:","Entregado:"],"話題:":["话题:","Topics:","話題:","Chủ đề:","Topik:","หัวข้อ:","주제:","Mga paksa:","Temas:"],"備註:":["备注:","Notes:","メモ:","Ghi chú:","Catatan:","หมายเหตุ:","메모:","Tala:","Notas:"],"編輯":["编辑","Edit","編集","Sửa","Ubah","แก้ไข","수정","I-edit","Editar"],"刪除":["删除","Delete","削除","Xóa","Hapus","ลบ","삭제","Burahin","Eliminar"],"共 {n} 筆,顯示 {m} 筆":["共 {n} 条,显示 {m} 条","{n} records, showing {m}","全{n}件、表示{m}件","Tổng {n} mục, hiển thị {m}","{n} catatan, menampilkan {m}","ทั้งหมด {n} รายการ แสดง {m} รายการ","총 {n}건, {m}건 표시","{n} rekord, ipinapakita ang {m}","{n} registros, mostrando {m}"],"還沒有記錄。按下方「新增訪視」開始第一筆。":["还没有记录。点下方「新增访视」开始第一条。","No records yet. Tap \"New visit\" below to add your first one.","記録がありません。下の「訪問を追加」から最初の記録を作りましょう。","Chưa có ghi chép. Bấm \"Thêm lần thăm\" bên dưới để bắt đầu.","Belum ada catatan. Ketuk \"Kunjungan baru\" di bawah untuk menambah yang pertama.","ยังไม่มีบันทึก แตะ \"เพิ่มการเยี่ยม\" ด้านล่างเพื่อเริ่มรายการแรก","아직 기록이 없습니다. 아래 \"방문 추가\"를 눌러 첫 기록을 만드세요.","Wala pang rekord. I-tap ang \"Bagong pagdalaw\" sa ibaba para idagdag ang una.","Aún no hay registros. Toca \"Nueva visita\" abajo para añadir el primero."],"沒有符合條件的記錄。":["没有符合条件的记录。","No matching records.","条件に合う記録がありません。","Không có ghi chép phù hợp.","Tidak ada catatan yang cocok.","ไม่พบบันทึกที่ตรงกัน","조건에 맞는 기록이 없습니다.","Walang tumugmang rekord.","No hay registros que coincidan."],"照片":["照片","Photo","写真","Ảnh","Foto","รูปภาพ","사진","Larawan","Foto"],"定位中…":["定位中…","Locating…","位置を取得中…","Đang định vị…","Mencari lokasi…","กำลังระบุตำแหน่ง…","위치 확인 중…","Hinahanap ang lokasyon…","Obteniendo ubicación…"],"此裝置不支援定位":["此设备不支持定位","Location is not supported on this device","この端末は位置情報に対応していません","Thiết bị không hỗ trợ định vị","Lokasi tidak didukung di perangkat ini","อุปกรณ์นี้ไม่รองรับการระบุตำแหน่ง","이 기기는 위치 기능을 지원하지 않습니다","Hindi sinusuportahan ang lokasyon sa device na ito","Este dispositivo no admite ubicación"],"無法取得":["无法获取","Unavailable","取得できません","Không lấy được","Tidak tersedia","ไม่สามารถรับได้","가져올 수 없음","Hindi makuha","No disponible"],"(請允許位置權限後重新拍照)":["(请允许位置权限后重新拍照)","(Allow location access, then retake the photo)","(位置情報を許可してから撮り直してください)","(Hãy cho phép truy cập vị trí rồi chụp lại)","(Izinkan akses lokasi, lalu ambil foto lagi)","(โปรดอนุญาตการเข้าถึงตำแหน่ง แล้วถ่ายรูปใหม่)","(위치 권한을 허용한 뒤 다시 촬영하세요)","(Payagan ang access sa lokasyon, saka kumuha ulit ng larawan)","(Permite el acceso a la ubicación y vuelve a tomar la foto)"],"正在取得地區…":["正在获取地区…","Getting area…","地域を取得中…","Đang lấy khu vực…","Mengambil wilayah…","กำลังรับข้อมูลพื้นที่…","지역 확인 중…","Kinukuha ang lugar…","Obteniendo zona…"],"已由 GPS 取得:{g}(可修改)":["已通过 GPS 获取:{g}(可修改)","From GPS: {g} (editable)","GPSから取得:{g}(修正できます)","Lấy từ GPS: {g} (có thể sửa)","Dari GPS: {g} (dapat diubah)","จาก GPS: {g} (แก้ไขได้)","GPS 결과: {g} (수정 가능)","Mula sa GPS: {g} (maaaring baguhin)","Desde GPS: {g} (editable)"],"暫時無法取得地區,可手動輸入。":["暂时无法获取地区,可手动输入。","Couldn't get the area right now. You can type it in.","地域を取得できません。手動で入力できます。","Tạm thời không lấy được khu vực. Bạn có thể nhập tay.","Wilayah belum bisa diambil. Anda bisa mengisinya sendiri.","ยังรับข้อมูลพื้นที่ไม่ได้ในตอนนี้ คุณกรอกเองได้","지금은 지역을 가져올 수 없습니다. 직접 입력할 수 있습니다.","Hindi makuha ang lugar ngayon. Maaari mo itong i-type.","No se pudo obtener la zona ahora. Puedes escribirla."],"目前離線,無法自動取得地區;連網後會自動補上,也可先手動輸入。":["当前离线,无法自动获取地区;联网后会自动补上,也可先手动输入。","You're offline, so the area can't be filled in yet. It will be added automatically once you're online, or you can type it now.","現在オフラインのため地域を取得できません。オンラインになると自動で補われます。先に手入力もできます。","Đang ngoại tuyến nên chưa lấy được khu vực. Khi có mạng sẽ tự bổ sung, hoặc bạn có thể nhập tay.","Anda sedang offline, jadi wilayah belum bisa diisi. Akan ditambahkan otomatis saat online, atau Anda bisa mengisinya sekarang.","ขณะนี้ออฟไลน์ จึงยังกรอกพื้นที่ให้ไม่ได้ เมื่อออนไลน์จะเพิ่มให้อัตโนมัติ หรือจะกรอกเองก่อนก็ได้","오프라인이라 지역을 아직 입력할 수 없습니다. 온라인이 되면 자동으로 채워지며, 먼저 직접 입력해도 됩니다.","Offline ka kaya hindi pa mapupunan ang lugar. Awtomatiko itong idaragdag kapag online na, o maaari mo itong i-type ngayon.","Estás sin conexión, así que la zona aún no se puede completar. Se añadirá automáticamente al volver a conectarte, o puedes escribirla ahora."],"請輸入住戶姓名":["请输入住户姓名","Please enter the resident's name","住人の名前を入力してください","Vui lòng nhập tên cư dân","Masukkan nama penghuni","โปรดกรอกชื่อผู้พักอาศัย","거주자 이름을 입력하세요","Pakilagay ang pangalan ng residente","Escribe el nombre del residente"],"請選擇性別":["请选择性别","Please choose a gender","性別を選択してください","Vui lòng chọn giới tính","Pilih jenis kelamin","โปรดเลือกเพศ","성별을 선택하세요","Pumili ng kasarian","Elige el sexo"],"請選擇目前狀態":["请选择当前状态","Please choose a status","状態を選択してください","Vui lòng chọn trạng thái","Pilih status","โปรดเลือกสถานะ","상태를 선택하세요","Pumili ng katayuan","Elige un estado"],"已儲存":["已保存","Saved","保存しました","Đã lưu","Tersimpan","บันทึกแล้ว","저장했습니다","Na-save","Guardado"],"編輯記錄":["编辑记录","Edit record","記録を編集","Sửa ghi chép","Ubah catatan","แก้ไขบันทึก","기록 수정","I-edit ang rekord","Editar registro"],"確定刪除這筆記錄?":["确定删除这条记录?","Delete this record?","この記録を削除しますか?","Xóa ghi chép này?","Hapus catatan ini?","ลบบันทึกนี้หรือไม่?","이 기록을 삭제할까요?","Buburahin ang rekord na ito?","¿Eliminar este registro?"],"目前沒有記錄可匯出":["当前没有记录可导出","No records to export","書き出す記録がありません","Không có ghi chép để xuất","Tidak ada catatan untuk diekspor","ไม่มีบันทึกให้ส่งออก","내보낼 기록이 없습니다","Walang rekord na ie-export","No hay registros para exportar"],"姓名":["姓名","Name","名前","Tên","Nama","ชื่อ","이름","Pangalan","Nombre"],"性別":["性别","Gender","性別","Giới tính","Jenis kelamin","เพศ","성별","Kasarian","Sexo"],"地區":["地区","Area","地域","Khu vực","Wilayah","พื้นที่","지역","Lugar","Zona"],"感興趣的話題":["感兴趣的话题","Topics of interest","関心のある話題","Chủ đề quan tâm","Topik yang diminati","หัวข้อที่สนใจ","관심 주제","Mga paksang interesado","Temas de interés"],"緯度":["纬度","Latitude","緯度","Vĩ độ","Lintang","ละติจูด","위도","Latitud","Latitud"],"經度":["经度","Longitude","経度","Kinh độ","Bujur","ลองจิจูด","경도","Longhitud","Longitud"],"地圖連結":["地图链接","Map link","地図リンク","Liên kết bản đồ","Tautan peta","ลิงก์แผนที่","지도 링크","Link ng mapa","Enlace del mapa"],"建立時間":["创建时间","Created","作成日時","Thời gian tạo","Dibuat","สร้างเมื่อ","생성 시각","Nilikha","Creado"],"最後編輯":["最后编辑","Last edited","最終編集","Sửa lần cuối","Terakhir diubah","แก้ไขล่าสุด","마지막 수정","Huling na-edit","Última edición"],"Excel 已匯出(照片請用備份檔保存)":["Excel 已导出(照片请用备份文件保存)","Excel exported (use a backup file to keep the photos)","Excelを書き出しました(写真はバックアップファイルで保存してください)","Đã xuất Excel (hãy dùng tệp sao lưu để giữ ảnh)","Excel diekspor (gunakan berkas cadangan untuk menyimpan foto)","ส่งออก Excel แล้ว (ใช้ไฟล์สำรองเพื่อเก็บรูปภาพ)","Excel을 내보냈습니다 (사진은 백업 파일로 보관하세요)","Na-export ang Excel (gamitin ang backup file para mapanatili ang mga larawan)","Excel exportado (usa una copia de seguridad para conservar las fotos)"],"目前沒有記錄可備份":["当前没有记录可备份","No records to back up","バックアップする記録がありません","Không có ghi chép để sao lưu","Tidak ada catatan untuk dicadangkan","ไม่มีบันทึกให้สำรอง","백업할 기록이 없습니다","Walang rekord na iba-backup","No hay registros para respaldar"],"備份檔已匯出,請存到雲端硬碟或寄給自己":["备份文件已导出,请存到云端硬盘或发给自己","Backup exported. Save it to cloud storage or send it to yourself.","バックアップを書き出しました。クラウドに保存するか自分宛に送信してください","Đã xuất tệp sao lưu. Hãy lưu lên đám mây hoặc gửi cho chính mình.","Cadangan diekspor. Simpan ke penyimpanan awan atau kirim ke diri sendiri.","ส่งออกไฟล์สำรองแล้ว โปรดบันทึกลงคลาวด์หรือส่งให้ตัวเอง","백업을 내보냈습니다. 클라우드에 저장하거나 자신에게 보내 두세요.","Na-export ang backup. I-save ito sa cloud o ipadala sa sarili.","Copia exportada. Guárdala en la nube o envíatela a ti mismo."],"還原完成:新增 {a} 筆,更新 {u} 筆":["还原完成:新增 {a} 条,更新 {u} 条","Restored: {a} added, {u} updated","復元完了:{a}件追加、{u}件更新","Đã khôi phục: thêm {a}, cập nhật {u}","Pemulihan selesai: {a} ditambahkan, {u} diperbarui","กู้คืนเสร็จแล้ว: เพิ่ม {a} อัปเดต {u}","복원 완료: {a}건 추가, {u}건 업데이트","Naibalik: {a} idinagdag, {u} na-update","Restaurado: {a} añadidos, {u} actualizados"],"備份檔格式不正確":["备份文件格式不正确","Invalid backup file","バックアップファイルの形式が正しくありません","Tệp sao lưu không hợp lệ","Berkas cadangan tidak valid","ไฟล์สำรองไม่ถูกต้อง","백업 파일이 올바르지 않습니다","Di-wasto ang backup file","Archivo de copia no válido"]},LANGS=['zh-TW','zh-CN','en','ja','vi','id','th','ko','fil','es'],LI=0;
+ function NK(s){return String(s).replace(/[\uff0c\uff1b\uff1a\uff08\uff09\uff1f\uff01]/g,function(c){return{'\uff0c':',','\uff1b':';','\uff1a':':','\uff08':'(','\uff09':')','\uff1f':'?','\uff01':'!'}[c]})}
+ function T(s){if(!LI)return s;var r=TB[NK(s)];return r&&r[LI-1]?r[LI-1]:s}
+ function F(s,v){return T(s).replace(/\{(\w+)\}/g,function(m,k){return v[k]})}
+ function pickLang(){
+  var p='auto';try{p=localStorage.getItem('jw-lang')||'auto'}catch(e){}
+  if(LANGS.indexOf(p)>=0)return p;
+  var l=navigator.languages&&navigator.languages.length?navigator.languages:[navigator.language||'en'];
+  for(var i=0;i<l.length;i++){var c=String(l[i]).toLowerCase();
+   if(/^zh/.test(c))return /(tw|hk|mo|hant)/.test(c)?'zh-TW':'zh-CN';
+   if(/^ja/.test(c))return 'ja';if(/^vi/.test(c))return 'vi';if(/^(id|in)(-|$)/.test(c))return 'id';if(/^th/.test(c))return 'th';if(/^ko/.test(c))return 'ko';if(/^(fil|tl)/.test(c))return 'fil';if(/^es/.test(c))return 'es';if(/^en/.test(c))return 'en'}
+  return 'en';
+ }
+ function applyLang(){
+  var lg=pickLang();LI=LANGS.indexOf(lg);document.documentElement.lang=lg;
+  var w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT,{acceptNode:function(n){return n.parentElement&&n.parentElement.closest('#items,script,style,#lang,#toast')?NodeFilter.FILTER_REJECT:NodeFilter.FILTER_ACCEPT}}),n,list=[];
+  while((n=w.nextNode()))list.push(n);
+  list.forEach(function(n){if(n.__o===undefined)n.__o=n.nodeValue;var k=n.__o.trim();if(k)n.nodeValue=n.__o.replace(k,T(k))});
+  document.querySelectorAll('[placeholder],[aria-label]').forEach(function(e){['placeholder','aria-label'].forEach(function(a){if(e.hasAttribute(a)){if(e['__o'+a]===undefined)e['__o'+a]=e.getAttribute(a);e.setAttribute(a,T(e['__o'+a]))}})});
+ }
+ var langSel=$('lang');
+ try{langSel.value=localStorage.getItem('jw-lang')||'auto'}catch(e){}
+ if(!langSel.value)langSel.value='auto';
+ langSel.onchange=function(){
+  try{localStorage.setItem('jw-lang',langSel.value)}catch(e){}
+  applyLang();render();setGps();
+  $('ftitle').textContent=T(editId?'編輯記錄':'新增訪視');
+  $('rhint').textContent=T('拍照或按「定位」後會自動填入,也可手動修改。');
+ };
+
+  async function init(){
+  applyLang();
   try{var v=await idbGet();if(Array.isArray(v))recs=v}catch(e){}
   if(!recs.length){try{var o=JSON.parse(localStorage.getItem(KEY)||'[]');if(o.length)recs=o}catch(e){}}
   recs.forEach(function(r){if(!r.id)r.id=uid()});
