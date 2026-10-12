@@ -95,7 +95,10 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
    <div class="row" id="navRow"></div>
   </div>
   <div class="card"><label class="f" for="name">住戶姓名</label><input type="text" id="name" autocomplete="off" placeholder="請輸入姓名"></div>
-  <div class="card"><label class="f" for="region">地區</label><input type="text" id="region" list="regions" autocomplete="off" placeholder="例如:東區、中山路"><datalist id="regions"></datalist></div>
+  <div class="card"><label class="f" for="region">地區(依 GPS 自動填入)</label>
+   <div style="display:flex;gap:8px"><input type="text" id="region" list="regions" autocomplete="off" placeholder="拍照後自動填入市、區、鄉鎮" style="flex:1"><button class="ghost" id="loc" type="button">定位</button></div>
+   <datalist id="regions"></datalist>
+   <div class="meta" id="rhint" style="margin-top:6px">拍照或按「定位」後會自動填入,也可手動修改。</div></div>
   <div class="card"><span class="f-title">住戶性別</span>
    <div class="seg"><input type="radio" name="g" id="gm" value="男"><label for="gm">男</label><input type="radio" name="g" id="gf" value="女"><label for="gf">女</label></div></div>
   <div class="card"><label class="f" for="mat">分發的資料</label><textarea id="mat" placeholder="例如:單張 2 份、手冊 1 本"></textarea></div>
@@ -171,12 +174,12 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
   $('name').value=r.name||'';$('region').value=r.region||'';$('mat').value=r.items||'';$('topic').value=r.topic||'';$('note').value=r.note||'';
   document.querySelectorAll('input[name=g],input[name=s]').forEach(function(x){x.checked=(x.value===r.gender||x.value===r.status)});
   if(!r.id)$('s1').checked=true;
-  $('cam').value='';
+  $('cam').value='';autoReg='';$('rhint').textContent='拍照或按「定位」後會自動填入,也可手動修改。';
  }
  function getGps(){
   $('gps').innerHTML='座標:<b>定位中…</b>';
   if(!navigator.geolocation){$('gps').innerHTML='座標:<b>此裝置不支援定位</b>';return}
-  navigator.geolocation.getCurrentPosition(function(p){cur.lat=p.coords.latitude;cur.lng=p.coords.longitude;setGps()},
+  navigator.geolocation.getCurrentPosition(function(p){cur.lat=p.coords.latitude;cur.lng=p.coords.longitude;setGps();fillRegion()},
    function(){$('gps').innerHTML='座標:<b>無法取得</b>(請允許位置權限後重新拍照)'},{enableHighAccuracy:true,timeout:15000,maximumAge:0});
  }
  function shrink(file,cb){
@@ -185,6 +188,35 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
    c.width=im.width*s;c.height=im.height*s;c.getContext('2d').drawImage(im,0,0,c.width,c.height);cb(c.toDataURL('image/jpeg',.65))};im.src=rd.result};
   rd.readAsDataURL(file);
  }
+/* ===== GPS 轉地區(市、區、鄉鎮):OpenStreetMap Nominatim,需連網 ===== */
+ var autoReg='',bf=false;
+ async function regionOf(lat,lng){
+  try{
+   var c=new AbortController(),t=setTimeout(function(){c.abort()},9000);
+   var r=await fetch('https://nominatim.openstreetmap.org/reverse?format=jsonv2&zoom=14&addressdetails=1&accept-language=zh-TW&lat='+lat+'&lon='+lng,{signal:c.signal});
+   clearTimeout(t);if(!r.ok)return '';
+   var a=(await r.json()).address||{},p1,p2;
+   if(a.county&&a.city){p1=a.county;p2=a.city}
+   else{p1=a.city||a.county||(a.state&&a.state.indexOf('省')<0?a.state:'')||'';
+    p2=a.city_district||a.suburb||a.town||a.township||a.municipality||a.borough||''}
+   if(p2===p1)p2='';
+   return (p1+p2).trim();
+  }catch(e){return ''}
+ }
+ async function fillRegion(){
+  if(cur.lat==null)return;
+  var h=$('rhint');h.textContent='正在取得地區…';
+  var g=await regionOf(cur.lat,cur.lng);
+  if(g){var v=$('region').value.trim();if(!v||v===autoReg)$('region').value=g;autoReg=g;h.textContent='已由 GPS 取得:'+g+'(可修改)'}
+  else h.textContent=navigator.onLine?'暫時無法取得地區,可手動輸入。':'目前離線,無法自動取得地區;連網後會自動補上,也可先手動輸入。';
+ }
+ async function backfill(){
+  if(bf||!navigator.onLine)return;bf=true;var ch=false;
+  for(var i=0;i<recs.length;i++){var r=recs[i];
+   if(r.lat!=null&&!r.region){var g=await regionOf(r.lat,r.lng);if(g){r.region=g;ch=true}await new Promise(function(x){setTimeout(x,1100)})}}
+  if(ch){persist();render()}bf=false;
+ }
+ $('loc').onclick=getGps;
  $('shoot').onclick=function(){$('cam').click()};
  $('cam').onchange=function(){var f=this.files&&this.files[0];if(!f)return;getGps();shrink(f,function(d){cur.photo=d;setPhoto(d)})};
  $('add').onclick=function(){editId=null;$('ftitle').textContent='新增訪視';fill();show(true)};
@@ -198,7 +230,7 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
   var before=JSON.stringify(recs);
   if(editId){recs=recs.map(function(r){return r.id===editId?Object.assign({},r,data,{edited:new Date().toLocaleString('zh-TW',{hour12:false})}):r})}
   else{data.id=uid();data.time=new Date().toLocaleString('zh-TW',{hour12:false});recs.unshift(data)}
-  if(persist()){toast('已儲存');show(false);render()}else{recs=JSON.parse(before)}
+  if(persist()){toast('已儲存');show(false);render();backfill()}else{recs=JSON.parse(before)}
  };
  $('items').onclick=function(e){
   var t=e.target,ed=t.getAttribute&&t.getAttribute('data-edit'),dl=t.getAttribute&&t.getAttribute('data-del');
@@ -293,7 +325,7 @@ h2.s-續訪中,h2.s-停止續訪,h2.s-不接受傳道{font-weight:700;border-bot
   try{var v=await idbGet();if(Array.isArray(v))recs=v}catch(e){}
   if(!recs.length){try{var o=JSON.parse(localStorage.getItem(KEY)||'[]');if(o.length)recs=o}catch(e){}}
   recs.forEach(function(r){if(!r.id)r.id=uid()});
-  render();
+  render();backfill();window.addEventListener('online',backfill);
   try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
   try{if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js')}catch(e){}
  }
