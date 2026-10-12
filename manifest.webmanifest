@@ -1,6 +1,6 @@
 {
-  "name": "JW Follow-up 續訪記錄",
-  "short_name": "JW Follow-up",
+  "name": "Follow-up 續訪記錄",
+  "short_name": "Follow-up",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
